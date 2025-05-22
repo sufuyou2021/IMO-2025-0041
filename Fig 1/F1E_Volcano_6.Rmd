@@ -1,0 +1,71 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-05-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+
+
+
+library(EnhancedVolcano)
+library(readxl)
+
+nor6 <- read_excel("C:/Users/mahler/Desktop/Figure 1.xlsx", 
+    sheet = "F1E_Volcano_6")
+
+group <- ifelse(
+  nor6$log2fc < -1.5 & nor6$FDR < 0.05, 'blue',
+  ifelse(nor6$log2fc > 1.5 & nor6$FDR < 0.05, 'red', 'gray')
+)
+group[is.na(group)] <- 'gray'
+names(group)[group == 'red'] <- 'Up'
+names(group)[group == 'gray'] <- 'Nodiff'
+names(group)[group == 'blue'] <- 'Down'
+
+downvals <- c("Akkermansia_muciniphila", "Clostridium_cocleatum")
+upvals <- c("Bifidobacterium_pseudolongum", "Lactobacillus_hamsteri", 
+            "Parabacteroides_distasonis", "Lactobacillus_vaginalis", 
+            "Ruminococcus_flavefaciens", "[Ruminococcus]_gnavus")
+
+EnhancedVolcano(nor6,
+  x = "log2fc",
+  y = "FDR",
+  lab = nor6$Species,
+  pCutoff = 10e-1 / 20,
+  FCcutoff = 1.5,
+  pointSize = 2.6,
+  labSize = 2.7,
+  xlim = c(-10, 10),
+  ylim = c(0, 6),
+  selectLab = c(downvals, upvals),
+  xlab = bquote(~Log[2]~'FC'),
+  ylab = bquote(~-Log[10]~adjusted~italic(p)),
+  labCol = 'black',
+  labFace = 'italic',       # 這裡讓字斜體
+  drawConnectors = TRUE,
+  colConnectors = 'black',
+  colCustom = group,
+  colAlpha = 0.6,
+  legendPosition = "none"
+)
+
+
+
+
+
+```
+
+
+
+```{r pressure, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
