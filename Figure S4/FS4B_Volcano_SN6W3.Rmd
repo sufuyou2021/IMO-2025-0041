@@ -1,0 +1,76 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-05-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+
+
+library(EnhancedVolcano)
+library(readxl)
+
+# Load differential expression data from Excel
+nor6 <- read_excel("C:/Users/mahler/Desktop/Figure S4.xlsx", 
+                   sheet = "FS4B_Volcano_SN6W3")
+
+# Assign color groups based on log2FC and FDR thresholds
+group <- ifelse(
+  nor6$log2fc < -1.5 & nor6$FDR < 0.05, 'blue',
+  ifelse(nor6$log2fc > 1.5 & nor6$FDR < 0.05, 'red', 'gray')
+)
+group[is.na(group)] <- 'gray'
+
+# (Optional: assign names to group levels, not used directly in plotting)
+names(group)[group == 'red'] <- 'Up'
+names(group)[group == 'gray'] <- 'Nodiff'
+names(group)[group == 'blue'] <- 'Down'
+
+# Define species to highlight (significantly downregulated)
+downvals <- c("Akkermansia_muciniphila", "Alistipes_finegoldii")
+
+# Define species to highlight (significantly upregulated)
+upvals <- c("Cetobacterium_somerae", "Ruminococcus_flavefaciens")
+
+# Create volcano plot
+EnhancedVolcano(nor6,
+  x = "log2fc",                          # x-axis: log2 fold change
+  y = "FDR",                             # y-axis: adjusted p-value (FDR)
+  lab = nor6$Species,                    # species labels
+  pCutoff = 10e-1 / 20,                  # FDR threshold
+  FCcutoff = 1.5,                        # log2 fold change threshold
+  pointSize = 2.6,                       # dot size
+  labSize = 2.7,                         # label font size
+  xlim = c(-10, 10),                     # x-axis range
+  ylim = c(0, 6),                        # y-axis range
+  selectLab = c(downvals, upvals),      # specific labels to highlight
+  xlab = bquote(~Log[2]~'FC'),           # formatted x-axis label
+  ylab = bquote(~-Log[10]~adjusted~italic(p)),  # formatted y-axis label
+  labCol = 'black',                      # label color
+  labFace = 'italic',                    # italicize species names
+  drawConnectors = TRUE,                # draw lines between labels and points
+  colConnectors = 'black',              # color of connector lines
+  colCustom = group,                    # custom color assignment
+  colAlpha = 0.6,                       # transparency of dots
+  legendPosition = "none"               # hide legend
+)
+
+
+
+
+
+```
+
+
+
+```{r pressure, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

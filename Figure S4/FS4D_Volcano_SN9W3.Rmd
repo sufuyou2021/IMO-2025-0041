@@ -1,0 +1,81 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-05-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+
+
+library(EnhancedVolcano)
+library(readxl)
+
+# Load differential expression data from Excel
+nor6 <- read_excel("C:/Users/mahler/Desktop/Figure S4.xlsx", 
+                   sheet = "FS4D_Volcano_SN9W3")
+
+# Assign color groups based on log2FC and FDR thresholds
+group <- ifelse(
+  nor6$log2fc < -1.5 & nor6$FDR < 0.05, 'blue',
+  ifelse(nor6$log2fc > 1.5 & nor6$FDR < 0.05, 'red', 'gray')
+)
+group[is.na(group)] <- 'gray'
+
+# (Optional: label group names, not used directly by EnhancedVolcano)
+names(group)[group == 'red'] <- 'Up'
+names(group)[group == 'gray'] <- 'Nodiff'
+names(group)[group == 'blue'] <- 'Down'
+
+# Define species to highlight as significantly downregulated
+downvals <- c("Clostridium_celatum", "Clostridium_cocleatum")
+
+# Define species to highlight as significantly upregulated
+upvals <- c("Bifidobacterium_pseudolongum", 
+            "Helicobacter_rodentium", 
+            "Lactobacillus_hamsteri")
+
+# Create volcano plot
+EnhancedVolcano(nor6,
+  x = "log2fc",                          # x-axis: log2 fold change
+  y = "FDR",                             # y-axis: adjusted p-value (FDR)
+  lab = nor6$Species,                    # labels for each species
+  pCutoff = 10e-1 / 20,                  # significance threshold for adjusted p-value
+  FCcutoff = 1.5,                        # fold change threshold
+  pointSize = 2.6,                       # size of each point
+  labSize = 2.7,                         # font size for labels
+  xlim = c(-10, 10),                     # range of x-axis
+  ylim = c(0, 6),                        # range of y-axis
+  selectLab = c(downvals, upvals),      # species to highlight with labels
+  xlab = bquote(~Log[2]~'FC'),           # formatted x-axis label
+  ylab = bquote(~-Log[10]~adjusted~italic(p)),  # formatted y-axis label
+  labCol = 'black',                      # label text color
+  labFace = 'italic',                    # italic font for labels
+  drawConnectors = TRUE,                # draw lines connecting labels to points
+  colConnectors = 'black',              # connector line color
+  colCustom = group,                    # color for each point based on group
+  colAlpha = 0.6,                        # point transparency
+  legendPosition = "none"               # hide legend
+)
+
+
+
+
+
+
+
+
+```
+
+
+
+```{r pressure, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
