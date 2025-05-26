@@ -1,0 +1,145 @@
+argv <- commandArgs(TRUE);
+in_file <- "hg.txt"
+in_group <- "bmap"
+#in_dist <- "20_bdiv/weighted_unifrac_dm.txt"
+
+if (length(argv) >2 | length(argv) < 1 ){
+    stop('The script needs 2 file: hg.txt and bmap')
+}
+  
+  in_file <- argv[1]
+  in_group <- argv[2]
+
+df <- read.table(in_file, sep = "\t", header = T, 
+                 stringsAsFactors = F, check.names = F,
+                 quote = "")
+#dist <- read.table(in_dist, sep = "\t", header = T, 
+#                   stringsAsFactors = F, check.names = F,row.names = 1,
+#                   quote = "")
+group <- read.table(in_group, sep = "\t", header = T, comment.char = "@", 
+                    stringsAsFactors = F, check.names = F,
+                    quote = "")
+######for legend go out of the page
+maxL=1
+for (i in 1:length(factor(group$Group))){
+if(maxL<length(strsplit(as.character(group$Group),"")[[i]])) maxL=length(strsplit(as.character(group$Group),"")[[i]])
+}
+
+group$Group[which(group$Group==group$Group[1])]=paste(group$Group[1],
+strrep("   ",t=1+maxL-length(strsplit(as.character(group$Group[1]),"")[[1]])),
+strrep("  ",t=length(strsplit(as.character(group$Group[1]),"")[[1]])),sep="")
+group$Group=factor(as.character(group$Group),levels=unique(as.character(group$Group)))
+######
+df$sum <- apply(df[,2:ncol(df)], 1, sum)
+df <- df[order(df$sum, decreasing = T),]
+df<-subset(df,sum>0)
+df$sum <- NULL
+write.table(df, "temp.txt", sep = "\t", 
+            row.names = FALSE, quote = FALSE)
+#system("perl /home/meta/flzx/Scripts/perl/heatmap.pl temp.txt")
+
+suppressMessages(library(pheatmap))
+suppressMessages(library(vegan))
+suppressMessages(library(RColorBrewer))
+data <- read.table('temp.txt', header=TRUE, check.names = F, sep = "\t", 
+                   stringsAsFactors = F, quote = "")
+data <- data[match(unique(data[,1]), data[,1]),]
+if(nrow(data) < 50){
+  t <- nrow(data)
+}else{
+  t <- 50
+}
+data <- data[1:t,]
+rownames(data) <- data[,1]
+data <- data[,-1]
+width <- 7.5
+
+if(ncol(data)>30 && (ncol(data)/4) > width){        ## change it when necessary
+width <- (ncol(data)/4)
+}
+
+
+#dcols = as.dist(dist)
+
+annotation_col =data.frame(
+  group=factor(group$Group)
+)
+rownames(annotation_col)=colnames(data)
+
+cols=c(c(brewer.pal(8,"Accent"),brewer.pal(12,"Set3"))[-4][-9][-9][-11],"#B87333", "#8B00FF", "#CCB38C", "#FF2400")[1:length(levels(factor(group$Group)))]
+names(cols)=as.character(levels(factor(group$Group)))
+
+
+ann_colors = list(
+  group=cols
+)
+if (length(levels(factor(group$Group)))<21) {
+pdf('heatmap.both_clustered.pdf',onefile=F,width=width,bg="white")
+pheatmap(data,
+         cluster_rows=T,
+         cluster_cols=T,
+         scale="row",
+         border_color="grey",
+         fontsize_row =7,
+         fontsize_col =9,
+         color = colorRampPalette(rev(c("red","white","blue")))(200),
+         clustering_method = "average",
+         clustering_distance_rows = "correlation",
+         #clustering_distance_cols = dcols,
+         angle_col=90,
+         annotation_col = annotation_col,
+         annotation_colors = ann_colors 
+)
+dev.off()
+system("gs -q -dSAFER -dBATCH -dNOPAUSE -r300 -sDEVICE=pngalpha -sOutputFile=heatmap.both_clustered.png heatmap.both_clustered.pdf")
+
+pdf('heatmap.taxa_clustered.pdf',onefile=F,width=width,bg="white")
+pheatmap(data,
+         cluster_rows=T,
+         cluster_cols=F,
+         scale="row",
+         border_color="grey",
+         fontsize_row =7,
+         color = colorRampPalette(rev(c("red","white","blue")))(200),
+         clustering_method = "average",
+         clustering_distance_rows = "correlation",
+         angle_col=90,
+         fontsize_col =9,
+         annotation_col = annotation_col,
+         annotation_colors = ann_colors) 
+dev.off()
+}else{
+pdf('heatmap.both_clustered.pdf',onefile=F,width=width,bg="white")
+pheatmap(data,
+         cluster_rows=T,
+         cluster_cols=T,
+         scale="row",
+         border_color="grey",
+         fontsize_row =7,
+         fontsize_col =9,
+         color = colorRampPalette(rev(c("red","white","blue")))(200),
+         clustering_method = "average",
+         clustering_distance_rows = "correlation",
+         #clustering_distance_cols = dcols,
+         angle_col=90
+
+)
+dev.off()
+system("gs -dSAFER -dBATCH -dNOPAUSE -r300 -sDEVICE=pngalpha -sOutputFile=heatmap.both_clustered.png heatmap.both_clustered.pdf")
+
+pdf('heatmap.taxa_clustered.pdf',onefile=F,width=width,bg="white")
+pheatmap(data,
+         cluster_rows=T,
+         cluster_cols=F,
+         scale="row",
+         border_color="grey",
+         fontsize_row =7,
+         color = colorRampPalette(rev(c("red","white","blue")))(200),
+         clustering_method = "average",
+         clustering_distance_rows = "correlation",
+         angle_col=90,
+         fontsize_col =9
+) 
+dev.off()
+}
+system("gs -q -dSAFER -dBATCH -dNOPAUSE -r300 -sDEVICE=pngalpha -sOutputFile=heatmap.taxa_clustered.png heatmap.taxa_clustered.pdf")
