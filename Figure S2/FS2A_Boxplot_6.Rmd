@@ -1,0 +1,125 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-05-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+
+library(gridExtra)
+library(readxl)
+library(tidyverse)
+library(rstatix)
+library(ggpubr)
+library(ggplot2)
+library(scales)
+ my1 <- "steelblue3"
+  my2 <-  "lightcoral"
+ my1 <- adjustcolor( my1, alpha.f = 0.8) 
+   my <- adjustcolor( my2, alpha.f = 0.4) 
+
+nor6 <- read_excel("C:/Users/mahler/Desktop/Figure S2.xlsx", 
+    sheet = "FS2A_Boxplot_6")
+
+
+nor6$GP <- factor(nor6$GP, levels = c("WT_6", "APP/PS1_6"))
+bxp <- ggplot(nor6, aes(y = `Bifidobacterium_pseudolongum`, x = GP, fill = GP))
+a <- bxp + geom_boxplot(outlier.shape = NA, size = 0.5, lwd = 0.8, varwidth = FALSE) +  
+  geom_jitter(size = 0.6) + 
+  scale_fill_manual(values = c(my1, my)) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  ylab(expression(italic("Bifidobacterium pseudolongum") )) +
+  xlab("")
+
+# Lactobacillus hamsteri
+bxp <- ggplot(nor6, aes(y = `Lactobacillus_hamsteri`, x = GP, fill = GP))
+b <- bxp + geom_boxplot(outlier.shape = NA, size = 0.5, lwd = 0.8, varwidth = FALSE) +  
+  geom_jitter(size = 0.6) + 
+  scale_fill_manual(values = c(my1, my)) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  ylab(expression(italic("Lactobacillus hamsteri") )) +
+  xlab("")
+
+# Ruminococcus flavefaciens
+bxp <- ggplot(nor6, aes(y = `Ruminococcus_flavefaciens`, x = GP, fill = GP))
+c <- bxp + geom_boxplot(outlier.shape = NA, size = 0.5, lwd = 0.8, varwidth = FALSE) +  
+  geom_jitter(size = 0.6) + 
+  scale_fill_manual(values = c(my1, my)) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  ylab(expression(italic("Ruminococcus flavefaciens") )) +
+  xlab("")
+
+# Parabacteroides distasonis
+bxp <- ggplot(nor6, aes(y = `Parabacteroides_distasonis`, x = GP, fill = GP))
+d <- bxp + geom_boxplot(outlier.shape = NA, size = 0.5, lwd = 0.8, varwidth = FALSE) +  
+  geom_jitter(size = 0.6) + 
+  scale_fill_manual(values = c(my1, my)) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  ylab(expression(italic("Parabacteroides distasonis") )) +
+  xlab("")
+
+# Lactobacillus vaginalis
+bxp <- ggplot(nor6, aes(y = `Lactobacillus_vaginalis`, x = GP, fill = GP))
+e <- bxp + geom_boxplot(outlier.shape = NA, size = 0.5, lwd = 0.8, varwidth = FALSE) +  
+  geom_jitter(size = 0.6) + 
+  scale_fill_manual(values = c(my1, my)) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  ylab(expression(italic("Lactobacillus vaginalis") )) +
+  xlab("")
+
+# Akkermansia muciniphila
+bxp <- ggplot(nor6, aes(y = `Akkermansia_muciniphila`, x = GP, fill = GP))
+f <- bxp + geom_boxplot(outlier.shape = NA, size = 0.5, lwd = 0.8, varwidth = FALSE) +  
+  geom_jitter(size = 0.6) + 
+  scale_fill_manual(values = c(my1, my)) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  ylab(expression(italic("Akkermansia muciniphila") )) +
+  xlab("")
+
+# Clostridium cocleatum
+bxp <- ggplot(nor6, aes(y = `Clostridium_cocleatum`, x = GP, fill = GP))
+g <- bxp + geom_boxplot(outlier.shape = NA, size = 0.5, lwd = 0.8, varwidth = FALSE) +  
+  geom_jitter(size = 0.6) + 
+  scale_fill_manual(values = c(my1, my)) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  ylab(expression(italic("Clostridium cocleatum") )) +
+  xlab("")
+
+# [Ruminococcus] gnavus
+bxp <- ggplot(nor6, aes(y = `[Ruminococcus]_gnavus`, x = GP, fill = GP))
+h <- bxp + geom_boxplot(outlier.shape = NA, size = 0.5, lwd = 0.8, varwidth = FALSE) +  
+  geom_jitter(size = 0.6) + 
+  scale_fill_manual(values = c(my1, my)) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  ylab(expression(italic("[Ruminococcus] gnavus") )) +
+  xlab("")
+
+
+grid.arrange(a, b,c, ncol = 3)
+grid.arrange(d, e,f, ncol = 3)
+grid.arrange(g, h,h, ncol = 3)
+
+
+```
+
+
+
+```{r pressure, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

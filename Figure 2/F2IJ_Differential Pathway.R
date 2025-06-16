@@ -1,0 +1,133 @@
+#!/opt/Software/R/R-3.1.0/bin/Rscript
+argv <- commandArgs(TRUE)
+
+if (length(argv) != 2){
+  stop('The script needs 2 files: 1) humann2 path_abun_unstrat.txt ; 2) map.txt ')
+}
+
+suppressMessages(library(ggplot2))
+suppressMessages(library(metagenomeSeq))
+suppressMessages(library(ggrepel))
+suppressMessages(library(grid))
+###load function
+remove_rare <- function(table , cutoff_pro ) {
+  row2keep <- c()
+  cutoff <- ceiling( cutoff_pro * ncol(table) )  
+  for ( i in 1:nrow(table) ) {
+    row_nonzero <- length( which( table[ i , ]  > 0 ) ) 
+    if ( row_nonzero > cutoff ) {
+      row2keep <- c( row2keep , i)
+    }
+  }
+  return( table [ row2keep , , drop=F ])
+}
+main_theme <- theme(panel.background=element_blank(),
+                    panel.grid=element_blank(),
+                    axis.line.x=element_line(color="black"),
+                    axis.line.y=element_line(color="black"),
+                    axis.ticks=element_line(color="black"),
+                    axis.text=element_text(colour="black", size=10),
+                    legend.position="top",
+                    legend.background=element_blank(),
+                    legend.key=element_blank(),
+                    text=element_text(family="sans"))
+############################
+setwd("./")
+loadMeta2<-function (file, sep = "\t") 
+{
+    dat2 <- read.table(file, header = FALSE, sep = sep, nrows = 1, 
+        stringsAsFactors = FALSE,colClasses = c("character"))
+    subjects <- as.character(dat2[1, -1])
+    classes <- c("character", rep("numeric", length(subjects)))
+    dat3 <- read.table(file, header = FALSE, skip = 1, sep = sep, 
+        colClasses = classes, row.names = 1)
+    colnames(dat3) = subjects
+    taxa <- rownames(dat3)
+    obj <- list(counts = as.data.frame(dat3), taxa = as.data.frame(taxa))
+    return(obj)
+}
+###############metagenomeSeq2 Z-inflated log-normal mixtrue model
+###for test
+#soil = loadMeta2(file.path("pau.txt"))
+#sample_SUM=colSums(soil$counts)
+#soil$count2=t(t(soil$counts)/sample_SUM)
+#meta = loadPhenoData(file.path("treat.txt"),tran = TRUE)
+#ord = match(colnames(soil$counts), rownames(meta))
+#meta = meta[ord, ]
+
+
+###
+soil = loadMeta2(file.path(argv[1]))
+sample_SUM=colSums(soil$counts)
+#soil$count2=t(t(soil$counts)/sample_SUM)
+meta = read.table(argv[2], sep = "\t", header = T, comment.char = "@", 
+                  stringsAsFactors = F, colClasses = "character")
+rownames(meta)<-meta[,1]
+meta<-meta[,-1]
+###
+
+levels(as.factor(meta$Group))->list
+#unique(meta$Group) -> list
+
+for(i in 1:(length(list)-1)){
+  for(j in (i+1):length(list)){
+    meta1<-meta[which(meta$Group==list[i]|meta$Group==list[j]),]
+    meta1$Group=as.character(meta1$Group)
+    obj = newMRexperiment(soil$counts[,rownames(meta1)],phenoData=AnnotatedDataFrame(meta1))
+    suppressMessages(obj <- cumNorm(obj, cumNormStat(obj)))
+    pd <- pData(obj)
+    suppressMessages(mod <- model.matrix(~1 + Group, data = pd)[,1:2])
+    soilres1 = fitFeatureModel(obj, mod)
+    result=MRcoefs(soilres1,number = nrow(obj))
+    result<-result[order(result$logFC,decreasing = T),]
+    result$logFC=signif(result$logFC,4)
+    result$adjPvalues=signif(result$adjPvalues,4)
+    result$pvalues=signif(result$pvalues,4)
+    result$se=signif(result$se,4)
+    result1<-result[which(result$adjPvalues<0.05),]
+    result2<-result[which(result$adjPvalues<0.1),]
+#   result1<-result1[order(result1$logFC,decreasing = T),]
+    dir.create(paste(list[i],list[j],sep="_vs_"))
+    colnames(result)[1]<-paste("pathway\t",colnames(result)[1],sep="")
+    write.table(result,paste(list[i],"_vs_",list[j],"/",list[i],"_vs_",list[j],"_fitFeatureModel.xls",sep=""),quote=F,sep="\t")
+    if(nrow(result1) > 0){
+        if(nrow(result1) > 1){ result1<-result1[order(result1$logFC,decreasing = T),] }
+    df=result1
+    df$Pathway=factor(rownames(result1),levels=c(as.character(rownames(result1))))
+    for (k in 1:length(df$Pathway)){
+      if (df$adjPvalues[k]<0.001) {df$color[k]="p<0.001"}
+      else if (df$adjPvalues[k]<0.01) {df$color[k]="p<0.01"}
+           else if (df$adjPvalues[k]<0.05) {df$color[k]="p<0.05"}
+    }
+    cols <- c("p<0.001" = "#ff3959", "p<0.01" = "#FF7F24", "p<0.05" = "#00FF7F")
+    pdf(file=paste(list[i],"_vs_",list[j],"/",list[i],"_vs_",list[j],"_pathway_metagenomeseq.pdf",sep=""),height=trunc(nrow(result1)/10+2),width=7)
+    p<-ggplot(df, aes(Pathway, logFC,fill=color))+
+      geom_bar(stat="identity",colour="black",show.legend=TRUE)+coord_flip()+
+      theme_bw()+theme(legend.key = element_rect(linetype='blank',fill = 'white'),panel.grid = element_blank())+
+      scale_fill_manual(values=cols,name="Significance",guide = "legend")
+    p2 <- ggplot_gtable(ggplot_build(p))
+    p2$layout$clip[p2$layout$name == "panel"] <- "off"
+    grid.draw(p2)
+    dev.off()
+    }
+    else{
+    if(nrow(result2) > 0){
+        if(nrow(result2) > 1){ result2<-result2[order(result2$logFC,decreasing = T),] }
+        df=result2
+        print(df)
+        df$Pathway=factor(rownames(result2),levels=c(as.character(rownames(result2))))
+        pdf(file=paste(list[i],"_vs_",list[j],"/",list[i],"_vs_",list[j],"_pathway_metagenomeseq.pdf",sep=""),height=trunc(nrow(result1)/10+2),width=7)
+        p<-ggplot(df, aes(Pathway, logFC,fill="grey"))+
+        geom_bar(stat="identity",colour="black",show.legend=TRUE)+coord_flip()+
+        theme_bw()+theme(legend.key = element_rect(linetype='blank',fill = 'white'),panel.grid = element_blank())+
+        scale_fill_manual(values=c("grey"),name="Significance",labels=c("p<0.1"),guide = "legend")
+      p2 <- ggplot_gtable(ggplot_build(p))
+      p2$layout$clip[p2$layout$name == "panel"] <- "off"
+      grid.draw(p2)
+      dev.off()
+    }
+    }
+  }
+}
+
+

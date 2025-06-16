@@ -1,0 +1,101 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-05-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+
+
+library(readxl)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+
+# Load data from Excel
+nor9 <- read_excel("C:/Users/mahler/Desktop/Figure 1.xlsx", sheet = "F1H_Boxplot_9")
+
+# Convert data to long format
+nor9_long <- pivot_longer(
+  nor9,
+  cols = -GP,
+  names_to = "variable",
+  values_to = "value"
+)
+
+# Define target bacterial species
+target_bacteria <- c(
+  "Bifidobacterium_pseudolongum",
+  "Lactobacillus_hamsteri",
+  "Parabacteroides_distasonis",
+  "Akkermansia_muciniphila",
+  "Clostridium_cocleatum",
+  "Ruminococcus_flavefaciens"
+)
+
+# Filter data for selected species and groups
+nor9_long <- subset(nor9_long, variable %in% target_bacteria)
+nor9_long <- subset(nor9_long, GP %in% c("WT_9", "APP/PS1_9"))
+
+# Replace underscores with spaces in species names
+nor9_long$variable <- str_replace_all(nor9_long$variable, "_", " ")
+target_bacteria_clean <- str_replace_all(target_bacteria, "_", " ")
+nor9_long$variable <- factor(nor9_long$variable, levels = target_bacteria_clean)
+nor9_long$GP <- factor(nor9_long$GP, levels = c("WT_9", "APP/PS1_9"))
+
+# Create boxplot
+p <- ggplot(nor9_long, aes(x = variable, y = value, fill = GP)) +
+  geom_boxplot(
+    color = "black",
+    outlier.shape = NA,
+    width = 0.5,
+    alpha = 0.8,
+    lwd = 0.8,
+    coef = 1.5,
+    notch = FALSE,
+    position = position_dodge(width = 0.6)
+  ) +
+  geom_jitter(
+    shape = 21,
+    color = "black",
+    size = 2.5,
+    alpha = 0.9,
+    position = position_jitterdodge(dodge.width = 0.6, jitter.width = 0.15, jitter.height = 0)
+  ) +
+  scale_fill_manual(values = c("WT_9" = "#483D8B", "APP/PS1_9" = "#A52A2A")) +
+  scale_y_continuous(breaks = seq(0, 5, by = 0.5)) +
+  theme_bw(base_size = 16) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 14, face = "italic"),  # italic x-axis labels
+    axis.text.y = element_text(size = 14),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 18),
+    legend.position = "top",           # place legend at the top
+    legend.direction = "horizontal",   # legend items in horizontal layout
+    legend.key.size = unit(0.8, "cm"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 14),
+    panel.grid.major.y = element_line(color = "gray90"),
+    panel.grid.minor.y = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, size = 1.2)
+  ) +
+  labs(y = "Relative Abundance")
+
+p
+
+
+```
+
+
+
+```{r pressure, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

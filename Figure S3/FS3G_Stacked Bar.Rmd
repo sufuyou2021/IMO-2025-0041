@@ -1,0 +1,82 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-05-20"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+library(readxl)
+library(ggplot2)
+library(dplyr)
+
+# Make sure the file path points correctly to the Excel file
+microbiota <- read_excel("C:/Users/mahler/Desktop/Figure S3.xlsx", 
+                         sheet = "FS3G_Stacked Bar")
+
+# Rename columns for easier reference
+colnames(microbiota) <- c("subgroup", "variable", "value")
+
+# Define the display order of subgroups
+microbiota$subgroup <- factor(microbiota$subgroup, 
+levels = c("EA_9W3", "S_9W3", "N_9W3", 
+           "EA_9", "S_9", "N_9", 
+           "EA_6W3", "S_6W3", "N_6W3", 
+           "EA_6", "S_6", "N_6"))
+
+# Define the display order of bacterial species
+microbiota$variable <- factor(microbiota$variable, levels = c(
+  'Akkermansia muciniphila', 'Alistipes finegoldii', 'Alistipes indistinctus',
+  'Alistipes massiliensis', 'Bacteroides acidifaciens', 'Bacteroides uniformis',
+  'Bifidobacterium pseudolongum', 'Butyricicoccus pullicaecorum', 'Cetobacterium somerae',
+  'Clostridium celatum', 'Clostridium cocleatum', 'Clostridium perfringens',
+  'Desulfovibrio C21 c20', 'Faecalibacterium prausnitzii', 'Helicobacter rodentium',
+  'Lactobacillus salivarius', 'Lactobacillus hamsteri', 'Lactobacillus vaginalis',
+  'Mucispirillum schaedleri', 'Parabacteroides distasonis', 'Ruminococcus flavefaciens',
+  '[Ruminococcus] gnavus', 'Subdoligranulum variabile'))
+
+# Create stacked bar plot
+ggplot(microbiota, aes(x = subgroup, y = value, fill = variable)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  theme_bw(base_size = 12) +
+  coord_flip() +  # Flip coordinates to make horizontal bars
+  theme(
+    axis.text.x = element_text(hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    legend.text = element_text(face = "italic", size = 9),
+    legend.position = "right",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA)
+  ) +
+  scale_fill_manual(
+    values = c('slateblue', 'firebrick3', 'cyan4', 'cornflowerblue', 'purple4', 
+               'mediumorchid', 'lightsalmon', 'magenta4', 'purple2', 
+               'mediumvioletred', 'olivedrab1', 'moccasin', 'lightseagreen', 
+               'lightcyan2', 'gold2', 'skyblue3', 'indianred1', 
+               'mediumturquoise', 'maroon', 'darkgoldenrod3', 
+               'palegreen4', 'indianred4', 'darkgray'),
+    guide = guide_legend(title = NULL)
+  ) +
+  xlab(NULL) +
+  ylab("Percentage")
+
+
+
+
+```
+
+
+
+```{r pressure, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

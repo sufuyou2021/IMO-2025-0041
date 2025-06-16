@@ -1,0 +1,47 @@
+library(EnhancedVolcano)
+library(readxl)
+
+# Load differential expression data from Excel
+nor6 <- read_excel("C:/Users/mahler/Desktop/Figure 1.xlsx", 
+                   sheet = "F1E_Volcano_6")
+
+# Define color groupings based on log2FC and FDR thresholds
+group <- ifelse(
+  nor6$log2fc < -1.5 & nor6$FDR < 0.05, 'blue',
+  ifelse(nor6$log2fc > 1.5 & nor6$FDR < 0.05, 'red', 'gray')
+)
+group[is.na(group)] <- 'gray'
+
+# (These lines attempt to assign names to the color vector but are unnecessary for EnhancedVolcano)
+names(group)[group == 'red'] <- 'Up'
+names(group)[group == 'gray'] <- 'Nodiff'
+names(group)[group == 'blue'] <- 'Down'
+
+# Define species to highlight (downregulated and upregulated)
+downvals <- c("Akkermansia_muciniphila", "Clostridium_cocleatum")
+upvals <- c("Bifidobacterium_pseudolongum", "Lactobacillus_hamsteri", 
+            "Parabacteroides_distasonis", "Lactobacillus_vaginalis", 
+            "Ruminococcus_flavefaciens", "[Ruminococcus]_gnavus")
+
+# Draw volcano plot
+EnhancedVolcano(nor6,
+  x = "log2fc",                     # x-axis: log2 fold change
+  y = "FDR",                        # y-axis: adjusted p-value (FDR)
+  lab = nor6$Species,              # species names for labeling
+  pCutoff = 10e-1 / 20,            # adjusted p-value threshold
+  FCcutoff = 1.5,                  # fold-change threshold
+  pointSize = 2.6,                 # dot size
+  labSize = 2.7,                   # label font size
+  xlim = c(-10, 10),               # x-axis limits
+  ylim = c(0, 6),                  # y-axis limits
+  selectLab = c(downvals, upvals),# labels to highlight
+  xlab = bquote(~Log[2]~'FC'),     # formatted x-axis label
+  ylab = bquote(~-Log[10]~adjusted~italic(p)), # formatted y-axis label
+  labCol = 'black',                # label color
+  labFace = 'italic',              # italicize label text
+  drawConnectors = TRUE,          # draw lines connecting labels
+  colConnectors = 'black',        # connector line color
+  colCustom = group,              # custom color by significance group
+  colAlpha = 0.6,                  # dot transparency
+  legendPosition = "none"         # hide legend
+)
